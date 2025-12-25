@@ -1,0 +1,8 @@
+{
+  "name": "KlasWallet",
+  "short_description": "Global Crypto-Fiat Merchant & Personal Wallet",
+  "description": "KlasWallet is a production-grade digital asset hub designed for individuals and merchants. Manage NGN, USD, and major cryptocurrencies (BTC, ETH, USDT, USDC) with institutional-grade security. Integrated with Bani.africa for seamless on/off-ramps, featuring a double-entry ledger system, tiered KYC, and an AI-powered financial advisor for smart asset management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

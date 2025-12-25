@@ -1,0 +1,67 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: klaswallet-api
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: klaswallet-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: klaswallet-api
+    spec:
+      containers:
+      - name: api
+        image: gcr.io/klaswallet/api:latest
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - secretRef:
+            name: klaswallet-secrets
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: klaswallet-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: klaswallet-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

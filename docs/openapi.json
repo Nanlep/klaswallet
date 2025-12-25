@@ -1,0 +1,58 @@
+
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "KlasWallet API",
+    "version": "1.0.0",
+    "description": "API for management of custodial crypto-fiat wallets integrated with Bani.africa."
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register new user",
+        "responses": { "201": { "description": "User created" } }
+      }
+    },
+    "/wallets": {
+      "get": {
+        "summary": "List user wallets",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of wallets" } }
+      }
+    },
+    "/exchange/quote": {
+      "post": {
+        "summary": "Get real-time exchange quote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": { "type": "string" },
+                  "to": { "type": "string" },
+                  "amount": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Quote details" } }
+      }
+    },
+    "/transactions/send": {
+      "post": {
+        "summary": "Initiate transfer",
+        "parameters": [
+          { "name": "X-Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Transaction pending" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    }
+  }
+}
