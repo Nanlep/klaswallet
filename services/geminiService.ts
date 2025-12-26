@@ -13,43 +13,42 @@ export class GeminiService {
           CONTEXT: Senior Financial Analyst for KlasWallet.
           USER DATA: ${userHistory}
           QUERY: ${query}
-          MARKET: BTC/USD volatility is high.
           
-          TASK: Provide a sharp, institutional-grade strategy summary.
-          LIMIT: Under 50 words. No boilerplate legal disclaimers. Focus on liquidity and hedging.
+          TASK: Provide a sharp strategy summary under 50 words. Focus on liquidity.
         `,
-        config: {
-          thinkingConfig: { thinkingBudget: 4000 }
-        }
+        config: { thinkingConfig: { thinkingBudget: 4000 } }
       });
-      return response.text || "Market analysis is currently offline.";
+      return response.text || "Strategic analysis offline.";
     } catch (error) {
-      console.error("Gemini Advisor Error:", error);
-      return "Strategic uplink failed. Reconnecting...";
+      return "Strategic uplink failed.";
     }
   }
 
-  async categorizeTransaction(description: string): Promise<string> {
+  async getSupportResponse(query: string): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Categorize: "${description}"`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              category: { type: Type.STRING }
-            },
-            required: ["category"]
-          }
-        }
+        contents: `
+          ROLE: Helpful KlasWallet Support Agent.
+          POLICIES: KYC takes 2-24 hours. Withdrawals are instant but depend on the blockchain. 
+          VASP LICENSE: NG-VASP-2024-429-A.
+          QUERY: ${query}
+        `,
+        config: { systemInstruction: "You are a friendly support bot for a crypto-fiat app in Africa. Be concise." }
       });
-      const result = JSON.parse(response.text?.trim() || '{"category": "Other"}');
-      return result.category;
+      return response.text || "I'm here to help. Could you repeat that?";
     } catch {
-      return "General";
+      return "Support system busy. Try again shortly.";
     }
+  }
+
+  async generateReleaseNotes(version: string, changes: string[]): Promise<string> {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate Play Store release notes for version ${version}. Features: ${changes.join(', ')}. Keep it exciting but professional.`
+    });
+    return response.text || "Minor improvements and bug fixes.";
   }
 }
