@@ -1,29 +1,55 @@
 
 import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MobilePreview } from './components/MobilePreview';
-import { Sidebar } from './components/Sidebar';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'admin' | 'mobile'>('admin');
+  const [activeTab, setActiveTab] = useState<'admin' | 'mobile'>('mobile');
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          {activeTab === 'admin' ? (
-            <AdminDashboard />
-          ) : (
-            <div className="flex justify-center">
-              <MobilePreview />
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+    <View style={styles.container}>
+      {/* Simulation Toggle - Web Only Helper */}
+      <View style={styles.webNav}>
+         <TouchableOpacity 
+           onPress={() => setActiveTab('admin')}
+           style={[styles.navBtn, activeTab === 'admin' && styles.navBtnActive]}
+         >
+           <Text style={[styles.navText, activeTab === 'admin' && styles.navTextActive]}>Admin Dashboard</Text>
+         </TouchableOpacity>
+         <TouchableOpacity 
+           onPress={() => setActiveTab('mobile')}
+           style={[styles.navBtn, activeTab === 'mobile' && styles.navBtnActive]}
+         >
+           <Text style={[styles.navText, activeTab === 'mobile' && styles.navTextActive]}>Mobile App (Native Primitives)</Text>
+         </TouchableOpacity>
+      </View>
+
+      <View style={styles.content}>
+        {activeTab === 'admin' ? (
+          <AdminDashboard />
+        ) : (
+          <MobilePreview />
+        )}
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f9fafb' },
+  webNav: { 
+    flexDirection: 'row', 
+    backgroundColor: '#111827', 
+    padding: 10, 
+    justifyContent: 'center',
+    gap: 20
+  },
+  navBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12 },
+  navBtnActive: { backgroundColor: '#4f46e5' },
+  navText: { color: '#9ca3af', fontWeight: '800', fontSize: 12, textTransform: 'uppercase' },
+  navTextActive: { color: '#fff' },
+  content: { flex: 1 }
+});
 
 export default App;

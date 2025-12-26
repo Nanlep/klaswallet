@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         >
           <div className="flex items-center space-x-4">
             <i className={`fa-solid fa-mobile-screen-button transition-transform ${activeTab === 'mobile' ? 'scale-110' : ''}`}></i>
-            <span className="text-xs font-black uppercase tracking-widest">App Sandbox</span>
+            <span className="text-xs font-black uppercase tracking-widest">App Preview</span>
           </div>
           {activeTab === 'mobile' && <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div>}
         </button>
