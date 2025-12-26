@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MobilePreview } from './components/MobilePreview';
 
@@ -8,48 +8,54 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'admin' | 'mobile'>('mobile');
 
   return (
-    <View style={styles.container}>
-      {/* Simulation Toggle - Web Only Helper */}
+    <SafeAreaView style={styles.container}>
+      {/* Simulation Toggle - Web-only control layer */}
       <View style={styles.webNav}>
          <TouchableOpacity 
            onPress={() => setActiveTab('admin')}
            style={[styles.navBtn, activeTab === 'admin' && styles.navBtnActive]}
          >
-           <Text style={[styles.navText, activeTab === 'admin' && styles.navTextActive]}>Admin Dashboard</Text>
+           <Text style={[styles.navText, activeTab === 'admin' && styles.navTextActive]}>Admin Master</Text>
          </TouchableOpacity>
          <TouchableOpacity 
            onPress={() => setActiveTab('mobile')}
            style={[styles.navBtn, activeTab === 'mobile' && styles.navBtnActive]}
          >
-           <Text style={[styles.navText, activeTab === 'mobile' && styles.navTextActive]}>Mobile App (Native Primitives)</Text>
+           <Text style={[styles.navText, activeTab === 'mobile' && styles.navTextActive]}>Mobile App Preview</Text>
          </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         {activeTab === 'admin' ? (
-          <AdminDashboard />
+          <View style={styles.fullFill}>
+            <AdminDashboard />
+          </View>
         ) : (
-          <MobilePreview />
+          <View style={styles.fullFill}>
+            <MobilePreview />
+          </View>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   webNav: { 
     flexDirection: 'row', 
-    backgroundColor: '#111827', 
-    padding: 10, 
+    backgroundColor: '#0f172a', 
+    padding: 12, 
     justifyContent: 'center',
-    gap: 20
+    gap: 15,
+    zIndex: 100
   },
-  navBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 12 },
+  navBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10 },
   navBtnActive: { backgroundColor: '#4f46e5' },
-  navText: { color: '#9ca3af', fontWeight: '800', fontSize: 12, textTransform: 'uppercase' },
+  navText: { color: '#94a3b8', fontWeight: '900', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
   navTextActive: { color: '#fff' },
-  content: { flex: 1 }
+  content: { flex: 1 },
+  fullFill: { flex: 1, height: '100%' }
 });
 
 export default App;
