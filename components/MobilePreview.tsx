@@ -10,15 +10,15 @@ import {
   TextInput, 
   ActivityIndicator,
   Dimensions,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Linking
 } from 'react-native';
 import { NativeSecurity } from '../services/nativeSecurity';
-import { GeminiService } from '../services/geminiService';
-import { BaniAdapter } from '../services/baniAdapter';
+import { GeminiService, InsightResult } from '../services/geminiService';
 
 const { width } = Dimensions.get('window');
 
-type Screen = 'Splash' | 'Auth' | 'Home' | 'Swap' | 'Support' | 'Wallet' | 'KYC' | 'Settings' | 'Legal';
+type Screen = 'Splash' | 'Auth' | 'Home' | 'Swap' | 'Support' | 'Wallet' | 'KYC' | 'Settings' | 'Legal' | 'Advisor';
 
 export const MobilePreview: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('Splash');
@@ -34,7 +34,6 @@ export const MobilePreview: React.FC = () => {
 
   useEffect(() => {
     const pollRates = async () => {
-      // Simulate real polling from BaniAdapter
       try {
         const delta = (Math.random() - 0.5) * 40;
         setLiveBtc(prev => prev + delta);
@@ -60,6 +59,7 @@ export const MobilePreview: React.FC = () => {
       case 'Swap': return <SwapScreen onBack={() => navigateTo('Home')} onExecute={() => navigateTo('Home')} />;
       case 'Settings': return <SettingsScreen onNavigate={navigateTo} onLogout={() => navigateTo('Auth')} />;
       case 'Legal': return <LegalScreen onBack={() => navigateTo('Settings')} />;
+      case 'Advisor': return <AdvisorScreen onBack={() => navigateTo('Home')} />;
       default: return <HomeScreen onNavigate={navigateTo} balances={balances} liveBtc={liveBtc} />;
     }
   };
@@ -75,7 +75,7 @@ export const MobilePreview: React.FC = () => {
           {currentScreen !== 'Auth' && currentScreen !== 'Splash' && (
             <View style={styles.tabBar}>
               <Tab icon="house" label="Home" active={currentScreen === 'Home'} onPress={() => navigateTo('Home')} />
-              <Tab icon="wallet" label="Assets" active={currentScreen === 'Wallet'} onPress={() => navigateTo('Wallet')} />
+              <Tab icon="chart-line" label="Advisor" active={currentScreen === 'Advisor'} onPress={() => navigateTo('Advisor')} />
               <Tab icon="headset" label="Support" active={currentScreen === 'Support'} onPress={() => navigateTo('Support')} />
               <Tab icon="gear" label="Settings" active={currentScreen === 'Settings'} onPress={() => navigateTo('Settings')} />
             </View>
@@ -85,14 +85,6 @@ export const MobilePreview: React.FC = () => {
     </View>
   );
 };
-
-const SplashScreen = () => (
-  <View style={styles.splashContainer}>
-    <View style={styles.logoContainerLarge}><i className="fa-solid fa-shield-halved" style={{ fontSize: 60, color: '#fff' }} /></View>
-    <Text style={styles.splashTitle}>KlasWallet</Text>
-    <View style={styles.splashFooter}><ActivityIndicator color="#fff" style={{ marginBottom: 20 }} /><Text style={styles.complianceNoteSplash}>Verified VASP Instance</Text></View>
-  </View>
-);
 
 const Tab = ({ icon, label, active, onPress }: any) => (
   <TouchableOpacity onPress={onPress} style={styles.tabItem}>
@@ -113,22 +105,90 @@ const HomeScreen = ({ onNavigate, balances, liveBtc }: any) => (
     <View style={styles.balanceCard}>
       <View style={styles.balanceHeader}><Text style={styles.balanceLabel}>Liquidity Portfolio</Text><i className="fa-solid fa-shield-check" style={{ color: 'rgba(255,255,255,0.4)' }} /></View>
       <Text style={styles.balanceValue}>${balances.usd.toLocaleString()}</Text>
-      <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+      <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
         <TouchableOpacity style={styles.actionBtn}><Text style={styles.actionBtnText}>Deposit</Text></TouchableOpacity>
         <TouchableOpacity onPress={() => onNavigate('Swap')} style={styles.actionBtnSecondary}><Text style={styles.actionBtnTextWhite}>Swap</Text></TouchableOpacity>
-      </div>
+      </View>
     </View>
+
+    <TouchableOpacity onPress={() => onNavigate('Advisor')} style={styles.advisorPulseCard}>
+       <View style={styles.pulseHeader}>
+          <Text style={styles.pulseTag}>Smart Insight</Text>
+          <i className="fa-solid fa-wand-magic-sparkles" style={{ color: '#fff' }} />
+       </View>
+       <Text style={styles.pulseTitle}>Market analysis for BTC is currently shifting. Get AI Advice.</Text>
+       <Text style={styles.pulseAction}>Open Market Advisor →</Text>
+    </TouchableOpacity>
 
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <QuickAction icon="paper-plane" label="Send" />
         <QuickAction icon="qrcode" label="Invoice" />
         <QuickAction icon="id-card" label="KYC" onPress={() => onNavigate('KYC')} />
         <QuickAction icon="clock-rotate-left" label="Activity" />
-      </div>
+      </View>
     </View>
   </ScrollView>
+);
+
+const AdvisorScreen = ({ onBack }: any) => {
+  const [loading, setLoading] = useState(false);
+  const [insight, setInsight] = useState<InsightResult | null>(null);
+  const gemini = new GeminiService();
+
+  const fetchInsight = async () => {
+    setLoading(true);
+    const result = await gemini.getMarketInsights("Current BTC vs NGN market outlook");
+    setInsight(result);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchInsight(); }, []);
+
+  return (
+    <ScrollView style={styles.screenContainer}>
+      <TouchableOpacity onPress={onBack} style={styles.backBtn}><i className="fa-solid fa-chevron-left" /></TouchableOpacity>
+      <Text style={styles.titleNative}>AI Advisor</Text>
+      <Text style={styles.advisorSubtitle}>Real-time analysis grounded in global search.</Text>
+
+      {loading ? (
+        <View style={styles.loadingFull}>
+          <ActivityIndicator size="large" color="#4f46e5" />
+          <Text style={styles.loadingText}>Polling Global Markets...</Text>
+        </View>
+      ) : insight ? (
+        <View style={styles.advisorContent}>
+          <View style={styles.insightCard}>
+             <Text style={styles.insightText}>{insight.text}</Text>
+          </View>
+          
+          <Text style={styles.sourceLabel}>Grounded Sources:</Text>
+          {insight.sources.map((src, i) => (
+            <TouchableOpacity key={i} style={styles.sourceCard} onPress={() => window.open(src.uri, '_blank')}>
+               <View style={styles.sourceIcon}><i className="fa-solid fa-link" style={{ fontSize: 10, color: '#4f46e5' }} /></View>
+               <View style={{ flex: 1 }}>
+                  <Text style={styles.sourceTitle} numberOfLines={1}>{src.title}</Text>
+                  <Text style={styles.sourceUri} numberOfLines={1}>{src.uri}</Text>
+               </View>
+            </TouchableOpacity>
+          ))}
+          
+          <TouchableOpacity onPress={fetchInsight} style={styles.refreshBtn}>
+             <Text style={styles.refreshBtnText}>Refresh Market Pulse</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+    </ScrollView>
+  );
+};
+
+const SplashScreen = () => (
+  <View style={styles.splashContainer}>
+    <View style={styles.logoContainerLarge}><i className="fa-solid fa-shield-halved" style={{ fontSize: 60, color: '#fff' }} /></View>
+    <Text style={styles.splashTitle}>KlasWallet</Text>
+    <View style={styles.splashFooter}><ActivityIndicator color="#fff" style={{ marginBottom: 20 }} /><Text style={styles.complianceNoteSplash}>Verified VASP Instance</Text></View>
+  </View>
 );
 
 const QuickAction = ({ icon, label, onPress }: any) => (
@@ -183,10 +243,6 @@ const LegalScreen = ({ onBack }: any) => (
     <View style={styles.legalSection}>
       <Text style={styles.legalTitle}>Privacy Policy</Text>
       <Text style={styles.legalText}>KlasWallet is a licensed VASP. We collect KYC data mandated by the Central Bank and share it with SmileID for verification purposes only.</Text>
-    </View>
-    <View style={styles.legalSection}>
-      <Text style={styles.legalTitle}>Terms of Service</Text>
-      <Text style={styles.legalText}>Users must be 18+. Institutional accounts require corporate registration documents and proof of beneficial ownership.</Text>
     </View>
   </ScrollView>
 );
@@ -296,13 +352,33 @@ const styles = StyleSheet.create({
   actionBtnText: { color: '#0f172a', fontWeight: '900', fontSize: 12, textTransform: 'uppercase' },
   actionBtnTextWhite: { color: '#fff', fontWeight: '900', fontSize: 12, textTransform: 'uppercase' },
 
+  advisorPulseCard: { backgroundColor: '#4f46e5', borderRadius: 28, padding: 24, marginTop: 25, shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20 },
+  pulseHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  pulseTag: { color: '#fff', fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  pulseTitle: { color: '#fff', fontSize: 16, fontWeight: '800', lineHeight: 22, marginBottom: 15 },
+  pulseAction: { color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+
   section: { marginTop: 35 },
   sectionTitle: { fontSize: 11, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 20 },
   gridItem: { alignItems: 'center', width: '22%' },
   iconCircle: { width: 56, height: 56, backgroundColor: '#f8fafc', borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9' },
   gridLabel: { fontSize: 9, fontWeight: '800', color: '#64748b', textTransform: 'uppercase' },
 
-  titleNative: { fontSize: 32, fontWeight: '900', color: '#0f172a', marginBottom: 30 },
+  titleNative: { fontSize: 32, fontWeight: '900', color: '#0f172a', marginBottom: 10 },
+  advisorSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 30, lineHeight: 20 },
+  advisorContent: { marginTop: 0 },
+  insightCard: { backgroundColor: '#f8fafc', padding: 24, borderRadius: 28, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 30 },
+  insightText: { fontSize: 16, color: '#1e293b', lineHeight: 24, fontWeight: '500' },
+  sourceLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 15 },
+  sourceCard: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff', borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#f1f5f9' },
+  sourceIcon: { width: 32, height: 32, backgroundColor: '#f1f5f9', borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  sourceTitle: { fontSize: 13, fontWeight: '800', color: '#1e293b' },
+  sourceUri: { fontSize: 10, color: '#94a3b8', marginTop: 2 },
+  refreshBtn: { marginTop: 20, padding: 20, alignItems: 'center' },
+  refreshBtnText: { color: '#4f46e5', fontWeight: '900', fontSize: 12, textTransform: 'uppercase' },
+  loadingFull: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 },
+  loadingText: { marginTop: 15, fontSize: 12, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' },
+
   chatScroll: { flex: 1, marginBottom: 15 },
   bubble: { padding: 16, borderRadius: 20, marginBottom: 10, maxWidth: '85%' },
   bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#4f46e5' },

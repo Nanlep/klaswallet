@@ -1,26 +1,44 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+export interface InsightResult {
+  text: string;
+  sources: { title: string; uri: string }[];
+}
+
 export class GeminiService {
   constructor() {}
 
-  async getFinancialAdvice(userHistory: string, query: string): Promise<string> {
+  async getMarketInsights(query: string): Promise<InsightResult> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: `
-          CONTEXT: Senior Financial Analyst for KlasWallet.
-          USER DATA: ${userHistory}
-          QUERY: ${query}
-          
-          TASK: Provide a sharp strategy summary under 50 words. Focus on liquidity.
+          Analyze the following market query for a KlasWallet institutional user: "${query}".
+          Focus on current market sentiment for BTC and NGN. 
+          Keep the summary under 100 words.
         `,
-        config: { thinkingConfig: { thinkingBudget: 4000 } }
+        config: { 
+          thinkingConfig: { thinkingBudget: 4000 },
+          tools: [{ googleSearch: {} }]
+        }
       });
-      return response.text || "Strategic analysis offline.";
+
+      const text = response.text || "Market data currently unavailable.";
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      
+      const sources = chunks
+        .filter(chunk => chunk.web)
+        .map(chunk => ({
+          title: chunk.web?.title || "Market Source",
+          uri: chunk.web?.uri || ""
+        }));
+
+      return { text, sources };
     } catch (error) {
-      return "Strategic uplink failed.";
+      console.error("Gemini Error:", error);
+      return { text: "Strategic uplink interrupted. Using cached local data.", sources: [] };
     }
   }
 
