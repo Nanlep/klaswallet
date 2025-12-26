@@ -14,10 +14,11 @@ import {
 } from 'react-native';
 import { NativeSecurity } from '../services/nativeSecurity';
 import { GeminiService } from '../services/geminiService';
+import { BaniAdapter } from '../services/baniAdapter';
 
 const { width } = Dimensions.get('window');
 
-type Screen = 'Splash' | 'Auth' | 'Home' | 'Swap' | 'Support' | 'Wallet' | 'KYC' | 'Settings';
+type Screen = 'Splash' | 'Auth' | 'Home' | 'Swap' | 'Support' | 'Wallet' | 'KYC' | 'Settings' | 'Legal';
 
 export const MobilePreview: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('Splash');
@@ -32,9 +33,14 @@ export const MobilePreview: React.FC = () => {
   }, [currentScreen]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveBtc(prev => prev + (Math.random() - 0.5) * 50);
-    }, 3000);
+    const pollRates = async () => {
+      // Simulate real polling from BaniAdapter
+      try {
+        const delta = (Math.random() - 0.5) * 40;
+        setLiveBtc(prev => prev + delta);
+      } catch (e) {}
+    };
+    const interval = setInterval(pollRates, 4000);
     return () => clearInterval(interval);
   }, []);
   
@@ -52,7 +58,8 @@ export const MobilePreview: React.FC = () => {
       case 'Wallet': return <WalletScreen balances={balances} />;
       case 'KYC': return <KYCScreen onBack={() => navigateTo('Home')} />;
       case 'Swap': return <SwapScreen onBack={() => navigateTo('Home')} onExecute={() => navigateTo('Home')} />;
-      case 'Settings': return <SettingsScreen onLogout={() => navigateTo('Auth')} />;
+      case 'Settings': return <SettingsScreen onNavigate={navigateTo} onLogout={() => navigateTo('Auth')} />;
+      case 'Legal': return <LegalScreen onBack={() => navigateTo('Settings')} />;
       default: return <HomeScreen onNavigate={navigateTo} balances={balances} liveBtc={liveBtc} />;
     }
   };
@@ -106,20 +113,20 @@ const HomeScreen = ({ onNavigate, balances, liveBtc }: any) => (
     <View style={styles.balanceCard}>
       <View style={styles.balanceHeader}><Text style={styles.balanceLabel}>Liquidity Portfolio</Text><i className="fa-solid fa-shield-check" style={{ color: 'rgba(255,255,255,0.4)' }} /></View>
       <Text style={styles.balanceValue}>${balances.usd.toLocaleString()}</Text>
-      <View style={styles.actionRow}>
+      <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
         <TouchableOpacity style={styles.actionBtn}><Text style={styles.actionBtnText}>Deposit</Text></TouchableOpacity>
         <TouchableOpacity onPress={() => onNavigate('Swap')} style={styles.actionBtnSecondary}><Text style={styles.actionBtnTextWhite}>Swap</Text></TouchableOpacity>
-      </View>
+      </div>
     </View>
 
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <View style={styles.grid}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <QuickAction icon="paper-plane" label="Send" />
         <QuickAction icon="qrcode" label="Invoice" />
         <QuickAction icon="id-card" label="KYC" onPress={() => onNavigate('KYC')} />
         <QuickAction icon="clock-rotate-left" label="Activity" />
-      </View>
+      </div>
     </View>
   </ScrollView>
 );
@@ -169,6 +176,21 @@ const SupportScreen = () => {
   );
 };
 
+const LegalScreen = ({ onBack }: any) => (
+  <ScrollView style={styles.screenContainer}>
+    <TouchableOpacity onPress={onBack} style={styles.backBtn}><i className="fa-solid fa-chevron-left" /></TouchableOpacity>
+    <Text style={styles.titleNative}>Legal</Text>
+    <View style={styles.legalSection}>
+      <Text style={styles.legalTitle}>Privacy Policy</Text>
+      <Text style={styles.legalText}>KlasWallet is a licensed VASP. We collect KYC data mandated by the Central Bank and share it with SmileID for verification purposes only.</Text>
+    </View>
+    <View style={styles.legalSection}>
+      <Text style={styles.legalTitle}>Terms of Service</Text>
+      <Text style={styles.legalText}>Users must be 18+. Institutional accounts require corporate registration documents and proof of beneficial ownership.</Text>
+    </View>
+  </ScrollView>
+);
+
 const AuthScreen = ({ onLogin }: any) => (
   <View style={styles.screenContainerCenter}>
     <View style={styles.logoContainer}><i className="fa-solid fa-shield-halved" style={{ fontSize: 40, color: '#fff' }} /></View>
@@ -194,13 +216,20 @@ const AssetItem = ({ name, code, amount, color }: any) => (
   </View>
 );
 
-const SettingsScreen = ({ onLogout }: any) => (
+const SettingsScreen = ({ onNavigate, onLogout }: any) => (
   <View style={styles.screenContainer}>
     <Text style={styles.titleNative}>Settings</Text>
     <View style={styles.settingsBox}>
-       <Text style={styles.settingsLabel}>VASP License: NG-VASP-2024-429-A</Text>
-       <Text style={styles.settingsLabel}>Network: Production Cloud</Text>
+       <TouchableOpacity style={styles.settingsRow} onPress={() => onNavigate('KYC')}>
+         <Text style={styles.settingsLabel}>Verification Status</Text>
+         <Text style={styles.settingsVal}>Tier 3</Text>
+       </TouchableOpacity>
+       <TouchableOpacity style={styles.settingsRow} onPress={() => onNavigate('Legal')}>
+         <Text style={styles.settingsLabel}>Legal & Privacy</Text>
+         <i className="fa-solid fa-chevron-right" style={{ color: '#cbd5e1', fontSize: 12 }} />
+       </TouchableOpacity>
     </View>
+    <Text style={styles.versionLabel}>Version 1.1.0 • Licensed VASP</Text>
     <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}><Text style={styles.logoutText}>End Session</Text></TouchableOpacity>
   </View>
 );
@@ -218,15 +247,22 @@ const KYCScreen = ({ onBack }: any) => (
   <View style={styles.screenContainer}>
     <TouchableOpacity onPress={onBack} style={styles.backBtn}><i className="fa-solid fa-chevron-left" /></TouchableOpacity>
     <Text style={styles.titleNative}>Verification</Text>
-    <View style={styles.kycCard}><Text style={styles.kycText}>Tier 3 Institutional Verification Active</Text></View>
+    <View style={styles.kycCard}>
+      <Text style={styles.kycText}>Tier 3 Institutional Verification Active</Text>
+      <View style={styles.safetyCard}>
+        <i className="fa-solid fa-user-shield" style={{ color: '#16a34a', fontSize: 24, marginBottom: 10 }} />
+        <Text style={styles.safetyTitle}>Data Safety Disclosure</Text>
+        <Text style={styles.safetyText}>Your biometric data is encrypted and shared only with SmileID for regulatory compliance. We do not store plain-text IDs.</Text>
+      </View>
+    </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   deviceContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
-  iphoneFrame: { width: 375, height: 812, backgroundColor: '#fff', borderRadius: 50, borderWidth: 10, borderColor: '#0f172a', overflow: 'hidden' },
+  iphoneFrame: { width: 375, height: 812, backgroundColor: '#fff', borderRadius: 50, borderWidth: 10, borderColor: '#0f172a', overflow: 'hidden', position: 'relative' },
   safeArea: { flex: 1 },
-  statusBar: { height: 44, alignItems: 'center' },
+  statusBar: { height: 44, alignItems: 'center', zIndex: 10 },
   notch: { width: 160, height: 34, backgroundColor: '#0f172a', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   content: { flex: 1 },
   tabBar: { height: 85, borderTopWidth: 1, borderTopColor: '#f1f5f9', flexDirection: 'row', backgroundColor: '#fff', paddingBottom: 25 },
@@ -255,7 +291,6 @@ const styles = StyleSheet.create({
   balanceHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   balanceLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   balanceValue: { color: '#fff', fontSize: 36, fontWeight: '900' },
-  actionRow: { flexDirection: 'row', marginTop: 24, gap: 12 },
   actionBtn: { flex: 1, height: 50, backgroundColor: '#fff', borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   actionBtnSecondary: { flex: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   actionBtnText: { color: '#0f172a', fontWeight: '900', fontSize: 12, textTransform: 'uppercase' },
@@ -263,7 +298,6 @@ const styles = StyleSheet.create({
 
   section: { marginTop: 35 },
   sectionTitle: { fontSize: 11, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 20 },
-  grid: { flexDirection: 'row', justifyContent: 'space-between' },
   gridItem: { alignItems: 'center', width: '22%' },
   iconCircle: { width: 56, height: 56, backgroundColor: '#f8fafc', borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9' },
   gridLabel: { fontSize: 9, fontWeight: '800', color: '#64748b', textTransform: 'uppercase' },
@@ -276,7 +310,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 14, fontWeight: '600' },
   textUser: { color: '#fff' },
   textAi: { color: '#0f172a' },
-  inputRow: { flexDirection: 'row', gap: 10 },
+  inputRow: { flexDirection: 'row', gap: 10, paddingBottom: 10 },
   chatInput: { flex: 1, height: 56, backgroundColor: '#f1f5f9', borderRadius: 28, paddingHorizontal: 20 },
   sendBtn: { width: 56, height: 56, backgroundColor: '#4f46e5', borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
 
@@ -293,8 +327,11 @@ const styles = StyleSheet.create({
   assetCode: { fontSize: 10, color: '#94a3b8' },
   assetAmount: { fontSize: 16, fontWeight: '900' },
 
-  settingsBox: { backgroundColor: '#f8fafc', padding: 20, borderRadius: 24, marginBottom: 30 },
-  settingsLabel: { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 5 },
+  settingsBox: { backgroundColor: '#f8fafc', padding: 20, borderRadius: 24, marginBottom: 15 },
+  settingsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  settingsLabel: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  settingsVal: { fontSize: 12, fontWeight: '900', color: '#10b981' },
+  versionLabel: { textAlign: 'center', fontSize: 9, fontWeight: '800', color: '#cbd5e1', marginBottom: 30, textTransform: 'uppercase' },
   logoutBtn: { alignItems: 'center' },
   logoutText: { color: '#ef4444', fontWeight: '900', fontSize: 11, textTransform: 'uppercase' },
 
@@ -302,5 +339,12 @@ const styles = StyleSheet.create({
   swapBox: { backgroundColor: '#f8fafc', padding: 30, borderRadius: 24, marginBottom: 30, alignItems: 'center' },
   swapVal: { fontSize: 24, fontWeight: '900', color: '#4f46e5' },
   kycCard: { backgroundColor: '#f0fdf4', padding: 30, borderRadius: 24, borderWidth: 1, borderColor: '#bbf7d0' },
-  kycText: { color: '#166534', fontWeight: '800', textAlign: 'center' }
+  kycText: { color: '#166534', fontWeight: '800', textAlign: 'center', marginBottom: 20 },
+  safetyCard: { backgroundColor: '#fff', padding: 20, borderRadius: 20, alignItems: 'center' },
+  safetyTitle: { fontSize: 14, fontWeight: '900', color: '#0f172a', marginBottom: 5 },
+  safetyText: { fontSize: 11, color: '#64748b', textAlign: 'center', lineHeight: 16 },
+
+  legalSection: { marginBottom: 25 },
+  legalTitle: { fontSize: 16, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
+  legalText: { fontSize: 13, color: '#64748b', lineHeight: 20 }
 });

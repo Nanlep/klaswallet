@@ -4,6 +4,8 @@
   "version": "1.1.0",
   "bundle_id": "com.klaswallet.enterprise",
   "description": "Enterprise-grade crypto-fiat terminal for the African market. Licensed Virtual Asset Service Provider (VASP) enabling institutional liquidity and merchant settlements.",
+  "privacy_policy_url": "https://klaswallet.com/privacy",
+  "support_email": "ops@klaswallet.com",
   "requestFramePermissions": [
     "camera",
     "microphone",

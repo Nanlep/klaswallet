@@ -18,7 +18,6 @@ const MOCK_CHART_DATA = [
 export const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'publishing' | 'console'>('overview');
-  const [loginLoading, setLoginLoading] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [consoleInput, setConsoleInput] = useState('');
   const [consoleLogs, setConsoleLogs] = useState<string[]>(['System initialized...', 'VASP License Verified: NG-VASP-2024-429-A']);
@@ -89,12 +88,22 @@ export const AdminDashboard: React.FC = () => {
         </nav>
 
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <StatCard label="Ledger Balance" value="₦4.2B" change="+2.4%" />
-            <StatCard label="KYC Pipeline" value="842" change="PENDING" />
-            <StatCard label="Settlements" value="99.9%" change="HEALTHY" />
-            <StatCard label="Active Sessions" value="2.1K" change="+15%" />
-            <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] border border-slate-100 h-[400px]">
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <StatCard label="Ledger Balance" value="₦4.2B" change="+2.4%" />
+              <StatCard label="KYC Pipeline" value="842" change="PENDING" />
+              <StatCard label="Settlements" value="99.9%" change="HEALTHY" />
+              <StatCard label="Active Sessions" value="2.1K" change="+15%" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <ServiceBadge name="Bani.africa Gateway" status="LIVE" latency="45ms" />
+              <ServiceBadge name="SmileID Verification" status="LIVE" latency="120ms" />
+              <ServiceBadge name="Gemini AI Node" status="LIVE" latency="1.2s" />
+              <ServiceBadge name="Ledger DB Cluster" status="SYNC" latency="4ms" />
+            </div>
+
+            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 h-[350px]">
                <ResponsiveContainer width="100%" height="100%">
                  <AreaChart data={MOCK_CHART_DATA}>
                    <defs>
@@ -184,6 +193,18 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
+const ServiceBadge = ({ name, status, latency }: any) => (
+  <div className="bg-white p-5 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm">
+    <div>
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{name}</p>
+      <p className="text-[10px] font-bold text-slate-900 mt-1">{latency}</p>
+    </div>
+    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${status === 'LIVE' || status === 'SYNC' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+      {status}
+    </div>
+  </div>
+);
 
 const NavTab = ({ active, label, onClick }: any) => (
   <button onClick={onClick} className={`pb-6 px-2 text-[11px] font-black uppercase tracking-widest border-b-4 transition-all ${active ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-300 hover:text-slate-500'}`}>{label}</button>
