@@ -18,7 +18,11 @@
     "socket.io": "^4.8.3",
     "fastify": "^5.6.2",
     "@fastify/jwt": "^10.0.0",
-    "fastify-socket.io": "^5.1.0"
+    "fastify-socket.io": "^5.1.0",
+    "expo-secure-store": "^15.0.8",
+    "expo-haptics": "^15.0.8",
+    "expo-local-authentication": "^17.0.8",
+    "@expo/vector-icons": "^15.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

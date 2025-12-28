@@ -1,8 +1,7 @@
 
-/**
- * NativeSecurity Abstraction
- * Handles bridging to device hardware features.
- */
+import * as Haptics from 'expo-haptics';
+import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 
 export enum BiometricType {
   FACE_ID = 'FaceID',
@@ -11,36 +10,47 @@ export enum BiometricType {
 }
 
 export class NativeSecurity {
-  /**
-   * Mocking expo-local-authentication
-   */
   static async authenticateBiometrics(): Promise<{ success: boolean; error?: string }> {
-    console.log("[Native] Invoking Device Biometric Prompt...");
-    // In actual Expo: return await LocalAuthentication.authenticateAsync();
-    await new Promise(r => setTimeout(r, 1000));
-    return { success: true };
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!hasHardware || !isEnrolled) {
+      return { success: false, error: 'Biometrics not available' };
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authorize Transaction',
+      fallbackLabel: 'Use Passcode',
+    });
+
+    // Use explicit type narrowing to fix the error: Property 'error' does not exist on type 'LocalAuthenticationResult'.
+    // In expo-local-authentication, 'error' is only present when 'success' is false.
+    if (result.success) {
+      return { success: true };
+    } else {
+      return { 
+        success: false, 
+        error: result.error 
+      };
+    }
   }
 
-  /**
-   * Mocking expo-secure-store
-   */
   static async setSecureItem(key: string, value: string): Promise<void> {
-    console.log(`[Native] Writing to Secure Enclave: ${key}`);
-    localStorage.setItem(`_secure_${key}`, value);
+    await SecureStore.setItemAsync(key, value);
   }
 
   static async getSecureItem(key: string): Promise<string | null> {
-    return localStorage.getItem(`_secure_${key}`);
+    return await SecureStore.getItemAsync(key);
   }
 
-  /**
-   * Mocking expo-haptics
-   */
   static triggerHaptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error') {
-    console.log(`[Native] Haptic Feedback: ${type}`);
-    if ('vibrate' in navigator) {
-      const pattern = type === 'error' ? [10, 30, 10, 30] : [10];
-      navigator.vibrate(pattern);
+    switch (type) {
+      case 'light': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); break;
+      case 'medium': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); break;
+      case 'heavy': Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); break;
+      case 'success': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); break;
+      case 'warning': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); break;
+      case 'error': Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); break;
     }
   }
 }
