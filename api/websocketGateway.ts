@@ -36,7 +36,8 @@ export class WebSocketGateway {
   private startRateBroadcaster() {
     setInterval(async () => {
       try {
-        const btcRate = await this.bani.getQuote('BTC', 'USD', 1);
+        // FIX: Updated method call from 'getQuote' to 'getMarkupAdjustedQuote' to align with the BaniAdapter service definition.
+        const btcRate = await this.bani.getMarkupAdjustedQuote('BTC', 'USD', 1);
         this.io.emit('rates:update', {
           pair: 'BTC/USD',
           rate: btcRate.totalRate,

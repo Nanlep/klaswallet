@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.3",
+    "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-native": "0.19.10",
+    "react-native": "0.19.13",
     "recharts": "2.12.7",
     "@google/genai": "1.3.0",
     "crypto": "^1.0.1",

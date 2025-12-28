@@ -23,9 +23,19 @@ export interface Wallet {
   id: string;
   userId: string;
   currency: string;
-  balance: bigint; // Stored in smallest unit (cents/satoshis) - use BigInt for safety
+  balance: bigint; 
   type: CurrencyType;
   isActive: boolean;
+}
+
+export interface POSInvoice {
+  id: string;
+  amountFiat: number;
+  currencyFiat: string;
+  amountCrypto: number;
+  currencyCrypto: string;
+  expiry: number;
+  status: TransactionStatus;
 }
 
 export interface Transaction {
@@ -34,7 +44,7 @@ export interface Transaction {
   walletId: string;
   amount: bigint;
   fee: bigint;
-  type: 'deposit' | 'withdrawal' | 'transfer' | 'exchange' | 'bill_pay';
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'exchange' | 'bill_pay' | 'pos_sale';
   status: TransactionStatus;
   metadata: Record<string, any>;
   idempotencyKey: string;
